@@ -1,25 +1,23 @@
 package com.spring.security.business.service;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 
 import com.spring.security.domain.AppUser;
-import com.spring.security.persistence.Persistence;
+import com.spring.security.repository.UserRepository;
 
 @Service
 public class AppUserServiceImpl implements AppUserService {
 
-    private final Persistence persistence;
+    private final UserRepository userRepository;
 
-    public AppUserServiceImpl(Persistence persistence) {
-        this.persistence = persistence;
+    public AppUserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
 
     @Override
     public AppUser save(AppUser appUser) {
-        return persistence.save(appUser);
+        return userRepository.save(appUser);
     }
 
     @Override
@@ -29,7 +27,7 @@ public class AppUserServiceImpl implements AppUserService {
 
     @Override
     public int existsByEmail(String email) {
-        return persistence.findByEmail(email).isPresent() ? 409 : 202;
+        return userRepository.findByEmail(email).isPresent() ? 409 : 202;
     }
 
 

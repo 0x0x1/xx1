@@ -1,5 +1,6 @@
 package com.spring.security.web.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.spring.security.business.service.AppUserService;
 import com.spring.security.domain.AppUser;
+import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.web.utility.Message;
 import com.spring.security.web.Result;
 import com.spring.security.web.payload.SignUpRequest;
@@ -22,10 +24,12 @@ import com.spring.security.web.utility.Status;
 public class AuthController implements AuthControllerDefinition {
 
     private final AppUserService appUserService;
+    private final AuthorityRepository authorityRepository;
 
     @Autowired
-    public AuthController(AppUserService appUserService) {
+    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository) {
         this.appUserService = appUserService;
+        this.authorityRepository = authorityRepository;
     }
 
     @PostMapping(value = REST_SIGN_UP_PATH)
@@ -40,10 +44,13 @@ public class AuthController implements AuthControllerDefinition {
                             Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED, Optional.empty());
                 }
                 case Status.Accepted -> {
-                    var appUser = new AppUser();
-                    appUser.setUsername(signUpRequest.username());
-                    appUser.setPassword(signUpRequest.password());
-                    appUser.setEmail(signUpRequest.email());
+                    var appUser = new AppUser.Builder()
+                            .setUsername(signUpRequest.username())
+                            .setEmail(signUpRequest.email())
+                            .setPassword(signUpRequest.password())
+                            // a registered user has hardcoded roles
+                            .setAuthorities(List.of(authorityRepository.findByAuthorityName("ADMIN"), authorityRepository.findByAuthorityName("USER")))
+                            .build();
 
                     var savedUser = appUserService.save(appUser);
 

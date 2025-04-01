@@ -1,4 +1,4 @@
-package com.spring.security.persistence;
+package com.spring.security.repository;
 
 import java.util.Optional;
 
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.spring.security.domain.AppUser;
 
 @Repository
-public interface Persistence extends JpaRepository<AppUser, Long> {
+public interface UserRepository extends JpaRepository<AppUser, Long> {
     AppUser findByUsername(String username);
     Optional<AppUser> findByEmail(String email);
 }
