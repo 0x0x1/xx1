@@ -1,15 +1,12 @@
 package com.spring.security.web.controller;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,48 +36,38 @@ public class AuthController implements AuthControllerDefinition {
 
     @Override
     @PostMapping(value = REST_SIGN_UP_PATH)
-    public ResponseEntity<Result<SignUpResponse>> signup(@RequestBody @Valid SignUpRequest signUpRequest, BindingResult bindingResult) {
+    public ResponseEntity<Result<SignUpResponse>> signup(@RequestBody @Valid SignUpRequest signUpRequest) {
 
-        if (bindingResult.hasErrors()) {
-            var errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
-            return ResponseEntity.badRequest().body(Result.failure(Status.BadRequest,
-                    Message.SIGN_UP_FAILED, errorMessage));
+        boolean userExists = appUserService.existsByEmail(signUpRequest.email());
+
+        if (userExists) {
+            return ResponseEntity.unprocessableEntity().body(Result.failure(Status.Conflict,
+                    Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED));
+        } else {
+
+            var appUser = createAppUser(signUpRequest);
+            AppUser savedUser = saveAppUser(appUser);
+
+            //mapToUserDto
+            var userDTO = new SignUpResponse(savedUser.getUsername(),
+                    savedUser.getPassword(),
+                    savedUser.getEmail());
+
+            return ResponseEntity.ok(Result.success(Status.OK, Message.SIGN_UP_SUCCESS, userDTO));
         }
+    }
 
-        int status = appUserService.existsByEmail(signUpRequest.email());
+    private AppUser createAppUser(SignUpRequest signUpRequest) {
+        return new AppUser.Builder()
+                .setUsername(signUpRequest.username())
+                .setEmail(signUpRequest.email())
+                .setPassword(signUpRequest.password())
+                // defined roles
+                .setAuthorities(List.of(authorityRepository.findByAuthorityName("ADMIN"), authorityRepository.findByAuthorityName("USER")))
+                .build();
+    }
 
-        try {
-            switch (status) {
-                case Status.Conflict -> {
-                    return ResponseEntity.unprocessableEntity().body(Result.failure(Status.Conflict,
-                            Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED));
-                }
-                case Status.Accepted -> {
-                    var appUser = new AppUser.Builder()
-                            .setUsername(signUpRequest.username())
-                            .setEmail(signUpRequest.email())
-                            .setPassword(signUpRequest.password())
-                            // a registered user has hardcoded roles
-                            .setAuthorities(List.of(authorityRepository.findByAuthorityName("ADMIN"), authorityRepository.findByAuthorityName("USER")))
-                            .build();
-
-                    var savedUser = appUserService.save(appUser);
-
-                    var userDTO = new SignUpResponse(savedUser.getUsername(),
-                            savedUser.getPassword(),
-                            savedUser.getEmail());
-
-                    return ResponseEntity.ok(Result.success(Status.OK, Message.SIGN_UP_SUCCESS, userDTO));
-                }
-                default -> {
-                    return ResponseEntity.badRequest().body(Result.failure(Status.BadRequest,
-                            Message.SIGN_UP_FAILED, Message.UNKNOWN_ERROR));
-                }
-            }
-        }
-        catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Result.failure(Status.InternalServerError,
-                    Message.SIGN_UP_FAILED, e.getMessage()));
-        }
+    private AppUser saveAppUser(AppUser appUser) {
+        return appUserService.save(appUser);
     }
 }

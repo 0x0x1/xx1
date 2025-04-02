@@ -26,8 +26,8 @@ public class AppUserServiceImpl implements AppUserService {
     }
 
     @Override
-    public int existsByEmail(String email) {
-        return userRepository.findByEmail(email).isPresent() ? 409 : 202;
+    public boolean existsByEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
     }
 
 

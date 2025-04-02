@@ -12,5 +12,6 @@ public class Message {
     public static final String USER_ALREADY_EXISTS = "User already exists.";
     public static final String DUPLICATES_NOT_ALLOWED = "Duplicates not allowed.";
     public static final String UNKNOWN_ERROR = "Unknown error occurred.";
+    public static final String VALIDATION_FAILED = "Validation failed.";
 
 }

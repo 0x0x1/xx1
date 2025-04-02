@@ -6,5 +6,5 @@ public interface AppUserService {
 
     AppUser save(AppUser appUser);
     boolean userExists(String username);
-    int existsByEmail(String email);
+    boolean existsByEmail(String email);
 }
