@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.spring.security.web.utility.Status;
-
 public class Result<T> {
 
     private final int code;
@@ -13,21 +11,23 @@ public class Result<T> {
     private final List<String> error;
     private final T data;
 
-    public Result(int code, String message, Object error, T data) {
+    private Result(int code, String message, Object error, T data) {
         this.code = code;
         this.message = message;
-        this.data = data;
         this.error = Collections.singletonList(error.toString());
+        this.data = data;
     }
 
     public static <T> Result<T> success(int code, String message, T data) {
         return new Result<>(code, message, List.of(), data);
     }
 
-    public static <T> Result<T> failure(int code, String message, String errorMessage, T data) {
-        var error = new ArrayList<>();
-        error.add(errorMessage);
-        return new Result<>(code, message, error, data);
+    public static <T> Result<T> failure(int code, String message, String error) {
+        return new Result<>(code, message, Collections.singletonList(error), null);
+    }
+
+    public static <T> Result<T> failure(int code, String message, List<String> errors) {
+        return new Result<>(code, message, errors, null);
     }
 
     public int getCode() {

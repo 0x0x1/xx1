@@ -1,9 +1,14 @@
 package com.spring.security.web.controller;
 
+import jakarta.validation.Valid;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.spring.security.web.Result;
 import com.spring.security.web.payload.SignUpRequest;
+import com.spring.security.web.payload.SignUpResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,5 +28,5 @@ public interface AuthControllerDefinition {
             @ApiResponse(responseCode = "409", description = "User already exists"),
             @ApiResponse(responseCode = "400", description = "Bad Request")
     })
-    public Result<?> signup(@RequestBody SignUpRequest signUpRequest);
+    ResponseEntity<Result<SignUpResponse>> signup(@RequestBody @Valid SignUpRequest signUpRequest, BindingResult bindingResult);
 }

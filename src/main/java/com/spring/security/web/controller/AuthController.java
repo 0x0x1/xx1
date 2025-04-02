@@ -1,10 +1,15 @@
 package com.spring.security.web.controller;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +21,7 @@ import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.web.utility.Message;
 import com.spring.security.web.Result;
 import com.spring.security.web.payload.SignUpRequest;
-import com.spring.security.web.payload.UserDTO;
+import com.spring.security.web.payload.SignUpResponse;
 import com.spring.security.web.utility.Status;
 
 @RestController
@@ -32,16 +37,23 @@ public class AuthController implements AuthControllerDefinition {
         this.authorityRepository = authorityRepository;
     }
 
+    @Override
     @PostMapping(value = REST_SIGN_UP_PATH)
-    public Result<?> signup(@RequestBody SignUpRequest signUpRequest) {
+    public ResponseEntity<Result<SignUpResponse>> signup(@RequestBody @Valid SignUpRequest signUpRequest, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            var errorMessage = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
+            return ResponseEntity.badRequest().body(Result.failure(Status.BadRequest,
+                    Message.SIGN_UP_FAILED, errorMessage));
+        }
 
         int status = appUserService.existsByEmail(signUpRequest.email());
 
         try {
             switch (status) {
                 case Status.Conflict -> {
-                    return Result.failure(Status.Conflict,
-                            Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED, Optional.empty());
+                    return ResponseEntity.unprocessableEntity().body(Result.failure(Status.Conflict,
+                            Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED));
                 }
                 case Status.Accepted -> {
                     var appUser = new AppUser.Builder()
@@ -54,20 +66,21 @@ public class AuthController implements AuthControllerDefinition {
 
                     var savedUser = appUserService.save(appUser);
 
-                    var userDTO = new UserDTO(savedUser.getUsername(),
+                    var userDTO = new SignUpResponse(savedUser.getUsername(),
                             savedUser.getPassword(),
                             savedUser.getEmail());
 
-                    return Result.success(Status.OK, Message.SIGN_UP_SUCCESS, userDTO);
+                    return ResponseEntity.ok(Result.success(Status.OK, Message.SIGN_UP_SUCCESS, userDTO));
                 }
                 default -> {
-                    return Result.failure(Status.BadRequest,
-                            Message.SIGN_UP_FAILED, Message.UNKNOWN_ERROR, Optional.empty());
+                    return ResponseEntity.badRequest().body(Result.failure(Status.BadRequest,
+                            Message.SIGN_UP_FAILED, Message.UNKNOWN_ERROR));
                 }
             }
-        } catch (Exception e) {
-            return Result.failure(Status.InternalServerError,
-                    Message.SIGN_UP_FAILED, e.getMessage(), Optional.empty());
+        }
+        catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Result.failure(Status.InternalServerError,
+                    Message.SIGN_UP_FAILED, e.getMessage()));
         }
     }
 }
