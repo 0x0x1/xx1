@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,11 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.spring.security.business.service.AppUserService;
 import com.spring.security.domain.AppUser;
 import com.spring.security.repository.AuthorityRepository;
-import com.spring.security.web.utility.Message;
 import com.spring.security.web.Result;
 import com.spring.security.web.payload.SignUpRequestDto;
 import com.spring.security.web.payload.SignUpResponseDto;
-import com.spring.security.web.utility.Status;
+import com.spring.security.web.config.MessagesConfig;
 import com.spring.security.web.utility.mapper.Mapper;
 
 @RestController
@@ -44,15 +44,15 @@ public class AuthController implements AuthControllerDefinition {
         boolean userExists = appUserService.existsByEmail(signUpRequestDto.email());
 
         if (userExists) {
-            return ResponseEntity.unprocessableEntity().body(Result.failure(Status.Conflict,
-                    Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED));
+            return ResponseEntity.badRequest().body(Result.failure(HttpStatus.BAD_REQUEST.value(),
+                    MessagesConfig.SIGN_UP_FAILED, MessagesConfig.DUPLICATES_NOT_ALLOWED));
         } else {
 
             var appUser = createAppUser(signUpRequestDto);
             AppUser savedUser = saveAppUser(appUser);
             var signUpResponseDto = mapper.toDto(savedUser);
 
-            return ResponseEntity.ok(Result.success(Status.OK, Message.SIGN_UP_SUCCESS, signUpResponseDto));
+            return ResponseEntity.ok(Result.success(HttpStatus.OK.value(), MessagesConfig.SIGN_UP_SUCCESS, signUpResponseDto));
         }
     }
 
