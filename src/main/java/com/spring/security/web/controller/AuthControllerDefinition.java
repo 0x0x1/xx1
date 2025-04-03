@@ -6,8 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.spring.security.web.Result;
-import com.spring.security.web.payload.SignUpRequest;
-import com.spring.security.web.payload.SignUpResponse;
+import com.spring.security.web.payload.SignUpRequestDto;
+import com.spring.security.web.payload.SignUpResponseDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,5 +27,5 @@ public interface AuthControllerDefinition {
             @ApiResponse(responseCode = "409", description = "User already exists"),
             @ApiResponse(responseCode = "400", description = "Bad Request")
     })
-    ResponseEntity<Result<SignUpResponse>> signup(@RequestBody @Valid SignUpRequest signUpRequest);
+    ResponseEntity<Result<SignUpResponseDto>> signup(@RequestBody @Valid SignUpRequestDto signUpRequestDto);
 }

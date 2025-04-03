@@ -17,9 +17,10 @@ import com.spring.security.domain.AppUser;
 import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.web.utility.Message;
 import com.spring.security.web.Result;
-import com.spring.security.web.payload.SignUpRequest;
-import com.spring.security.web.payload.SignUpResponse;
+import com.spring.security.web.payload.SignUpRequestDto;
+import com.spring.security.web.payload.SignUpResponseDto;
 import com.spring.security.web.utility.Status;
+import com.spring.security.web.utility.mapper.Mapper;
 
 @RestController
 @RequestMapping(path = AuthControllerDefinition.REST_AUTH_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -27,43 +28,41 @@ public class AuthController implements AuthControllerDefinition {
 
     private final AppUserService appUserService;
     private final AuthorityRepository authorityRepository;
+    private final Mapper<AppUser, SignUpResponseDto> mapper;
 
     @Autowired
-    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository) {
+    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository, Mapper<AppUser, SignUpResponseDto> mapper) {
         this.appUserService = appUserService;
         this.authorityRepository = authorityRepository;
+        this.mapper = mapper;
     }
 
     @Override
     @PostMapping(value = REST_SIGN_UP_PATH)
-    public ResponseEntity<Result<SignUpResponse>> signup(@RequestBody @Valid SignUpRequest signUpRequest) {
+    public ResponseEntity<Result<SignUpResponseDto>> signup(@RequestBody @Valid SignUpRequestDto signUpRequestDto) {
 
-        boolean userExists = appUserService.existsByEmail(signUpRequest.email());
+        boolean userExists = appUserService.existsByEmail(signUpRequestDto.email());
 
         if (userExists) {
             return ResponseEntity.unprocessableEntity().body(Result.failure(Status.Conflict,
                     Message.SIGN_UP_FAILED, Message.DUPLICATES_NOT_ALLOWED));
         } else {
 
-            var appUser = createAppUser(signUpRequest);
+            var appUser = createAppUser(signUpRequestDto);
             AppUser savedUser = saveAppUser(appUser);
+            var signUpResponseDto = mapper.toDto(savedUser);
 
-            //mapToUserDto
-            var userDTO = new SignUpResponse(savedUser.getUsername(),
-                    savedUser.getPassword(),
-                    savedUser.getEmail());
-
-            return ResponseEntity.ok(Result.success(Status.OK, Message.SIGN_UP_SUCCESS, userDTO));
+            return ResponseEntity.ok(Result.success(Status.OK, Message.SIGN_UP_SUCCESS, signUpResponseDto));
         }
     }
 
-    private AppUser createAppUser(SignUpRequest signUpRequest) {
+    private AppUser createAppUser(SignUpRequestDto signUpRequestDto) {
         return new AppUser.Builder()
-                .setUsername(signUpRequest.username())
-                .setEmail(signUpRequest.email())
-                .setPassword(signUpRequest.password())
+                .setUsername(signUpRequestDto.username())
+                .setEmail(signUpRequestDto.email())
+                .setPassword(signUpRequestDto.password())
                 // defined roles
-                .setAuthorities(List.of(authorityRepository.findByAuthorityName("ADMIN"), authorityRepository.findByAuthorityName("USER")))
+                .setAuthorities(List.of(authorityRepository.findByAuthorityName("ADMIN")))
                 .build();
     }
 

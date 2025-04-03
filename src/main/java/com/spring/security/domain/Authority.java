@@ -20,6 +20,10 @@ public class Authority {
 
     public Authority() {}
 
+    public Authority(String authorityName) {
+        this.authorityName = authorityName;
+    }
+
     public Long getId() {
         return id;
     }
