@@ -31,8 +31,6 @@ public class GlobalExceptionHandler {
                 .toList();
 
         return ResponseEntity.badRequest()
-                .body(Result.failure(HttpStatus.BAD_REQUEST.value(),
-                        MessagesConfig.VALIDATION_FAILED,
-                        errors));
+                .body(Result.failure(HttpStatus.BAD_REQUEST.value(), MessagesConfig.VALIDATION_FAILED, errors));
     }
 }

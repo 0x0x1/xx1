@@ -47,7 +47,6 @@ public class AuthController implements AuthControllerDefinition {
             return ResponseEntity.badRequest().body(Result.failure(HttpStatus.BAD_REQUEST.value(),
                     MessagesConfig.SIGN_UP_FAILED, MessagesConfig.DUPLICATES_NOT_ALLOWED));
         } else {
-
             var appUser = createAppUser(signUpRequestDto);
             AppUser savedUser = saveAppUser(appUser);
             var signUpResponseDto = mapper.toDto(savedUser);

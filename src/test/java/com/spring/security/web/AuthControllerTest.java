@@ -2,6 +2,8 @@ package com.spring.security.web;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -17,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spring.security.business.service.AppUserService;
 import com.spring.security.domain.AppUser;
+import com.spring.security.domain.Authority;
 import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.repository.UserRepository;
 import com.spring.security.web.config.MessagesConfig;
@@ -50,25 +54,99 @@ public class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    SignUpRequestDto requestDto;
+    SignUpRequestDto signUpRequestDto;
+    SignUpRequestDto signUpRequestDtoInvalidEmail;
+    SignUpResponseDto signUpResponseDto;
+    AppUser mockAppUser;
+    Authority mockAuthority;
 
     @BeforeEach
     public void setUp() {
-        requestDto = new SignUpRequestDto("testuser", "password123", "test@example.com");
+        //TODO create the mock objects more efficiently without populating the tests
+        signUpRequestDto = new SignUpRequestDto("testuser", "password123", "test@example.com");
+        signUpRequestDtoInvalidEmail = new SignUpRequestDto("testuser", "password123", "invalidEmail");
+        signUpResponseDto = new SignUpResponseDto();
+        signUpResponseDto.setUsername("testuser");
+        signUpResponseDto.setPassword("password123");
+        signUpResponseDto.setEmail("test@example.com");
+
+        mockAppUser = new AppUser.Builder()
+                .setUsername("testuser")
+                .setEmail("test@example.com")
+                .setPassword("password123")
+                .setAuthorities(List.of())
+                .build();
+
+        mockAuthority = new Authority();
+        mockAuthority.setAuthorityName("ADMIN");
+    }
+
+    @Test
+    void when_SignUp_With_InvalidEmail_ThenFail() throws JsonProcessingException {
+        //Mock externals
+        Mockito.when(appUserService.existsByEmail(Mockito.anyString())).thenReturn(false);
+        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDtoInvalidEmail);
+
+        String expectedJson = "{\"code\":400,\"message\":\"Validation failed.\",\"error\":[\"[email: Invalid email]\"],\"data\":null}";
+
+        mvc.perform(post(REST_SIGN_UP_URL)
+                        .content(jsonRequest)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .assertThat()
+                .hasStatus(HttpStatus.BAD_REQUEST.value())
+                .hasBodyTextEqualTo(expectedJson);
     }
 
     @Test
     void when_SignUp_With_DuplicateEmail_ThenFail() throws JsonProcessingException {
+        //Mock externals
         Mockito.when(appUserService.existsByEmail(Mockito.anyString())).thenReturn(true);
-        String jsonRequest = objectMapper.writeValueAsString(requestDto);
+        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDto);
 
         String expectedJson = "{\"code\":400,\"message\":\"Sign up failed.\",\"error\":[\"[Duplicates not allowed.]\"],\"data\":null}";
 
         mvc.perform(post(REST_SIGN_UP_URL)
                         .content(jsonRequest)
                         .contentType(MediaType.APPLICATION_JSON))
+                            .assertThat()
+                                .hasStatus(HttpStatus.BAD_REQUEST.value())
+                                .hasBodyTextEqualTo(expectedJson);
+    }
+
+    @Test
+    void when_SignUp_With_validData_ThenSuccess() throws JsonProcessingException {
+        //Mock externals
+        Mockito.when(appUserService.existsByEmail(Mockito.anyString())).thenReturn(false);
+        Mockito.when(appUserService.save(Mockito.any())).thenReturn(mockAppUser);
+        Mockito.when(appUserMapper.toDto(Mockito.any())).thenReturn(signUpResponseDto);
+        Mockito.when(authorityRepository.findByAuthorityName(Mockito.anyString())).thenReturn(mockAuthority);
+
+        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDto);
+
+        String expectedJson = "{\"code\":200,\"message\":\"User registration is successful.\",\"error\":[\"[]\"],\"data\":{\"username\":\"testuser\",\"password\":\"password123\",\"email\":\"test@example.com\",\"authorities\":[]}}";
+
+        mvc.perform(post(REST_SIGN_UP_URL)
+                        .content(jsonRequest)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .assertThat()
-                    .hasStatus(400)
-                    .hasBodyTextEqualTo(expectedJson);
+                .hasStatus(HttpStatus.OK.value())
+                .hasBodyTextEqualTo(expectedJson);
+    }
+
+    @Test
+    void when_SignUp_ThrowsUnexpectedException_Then500WithMessage() throws JsonProcessingException {
+        Mockito.when(appUserService.existsByEmail(Mockito.anyString()))
+                .thenThrow(new RuntimeException("Something went wrong"));
+
+        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDto);
+
+        String expectedJson = "{\"code\":500,\"message\":\"Sign up failed.\",\"error\":[\"[Something went wrong]\"],\"data\":null}";
+
+        mvc.perform(post(REST_SIGN_UP_URL)
+                        .content(jsonRequest)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .assertThat()
+                .hasStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .hasBodyTextEqualTo(expectedJson);
     }
 }

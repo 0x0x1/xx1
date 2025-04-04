@@ -21,6 +21,11 @@ public class MessagesConfig {
         SIGN_UP_SUCCESS = value;
     }
 
+    @Value("${app.validation.failed}")
+    public void setValidationFailed(String validationFailed) {
+        VALIDATION_FAILED = validationFailed;
+    }
+
     @Value("${app.signup.failed}")
     public void setSignUpFailed(String signUpFailed) {
         MessagesConfig.SIGN_UP_FAILED = signUpFailed;
@@ -32,7 +37,7 @@ public class MessagesConfig {
     }
 
     @Value("${app.invalid.credentials}")
-    public static void setInvalidCredentials(String invalidCredentials) {
+    public void setInvalidCredentials(String invalidCredentials) {
         INVALID_CREDENTIALS = invalidCredentials;
     }
 
@@ -42,12 +47,7 @@ public class MessagesConfig {
     }
 
     @Value("${app.unknown.error}")
-    public static void setUnknownError(String unknownError) {
+    public void setUnknownError(String unknownError) {
         UNKNOWN_ERROR = unknownError;
-    }
-
-    @Value("${app.validation.failed}")
-    public static void setValidationFailed(String validationFailed) {
-        VALIDATION_FAILED = validationFailed;
     }
 }
