@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public interface AuthControllerDefinition {
 
     String REST_AUTH_PATH = "/api/auth";
-    String REST_SIGN_UP_PATH = "/signup";
+    String REST_SIGN_UP_PATH = "/public/signup";
 
     @Operation(description = "Allows user to sign up.", method = "POST")
     @ApiResponses({

@@ -1,9 +1,10 @@
-package com.spring.security.business.service;
+package com.spring.security.service.impl;
 
 import org.springframework.stereotype.Service;
 
 import com.spring.security.domain.AppUser;
 import com.spring.security.repository.UserRepository;
+import com.spring.security.service.AppUserService;
 
 @Service
 public class AppUserServiceImpl implements AppUserService {

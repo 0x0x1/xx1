@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.spring.security.web.Result;
 import com.spring.security.web.payload.SignUpResponseDto;
-import com.spring.security.web.config.MessagesConfig;
+import com.spring.security.web.config.MessageConfig;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Result<SignUpResponseDto>> handleUnexpectedException(Exception e) {
         return ResponseEntity.internalServerError()
                 .body(Result.failure(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                MessagesConfig.SIGN_UP_FAILED, e.getMessage()));
+                MessageConfig.SIGN_UP_FAILED, e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -31,6 +31,6 @@ public class GlobalExceptionHandler {
                 .toList();
 
         return ResponseEntity.badRequest()
-                .body(Result.failure(HttpStatus.BAD_REQUEST.value(), MessagesConfig.VALIDATION_FAILED, errors));
+                .body(Result.failure(HttpStatus.BAD_REQUEST.value(), MessageConfig.VALIDATION_FAILED, errors));
     }
 }

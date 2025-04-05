@@ -6,7 +6,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @PropertySource("classpath:application-messages.properties")
-public class MessagesConfig {
+public class MessageConfig {
 
     public static String SIGN_UP_SUCCESS;
     public static String SIGN_UP_FAILED;
@@ -28,7 +28,7 @@ public class MessagesConfig {
 
     @Value("${app.signup.failed}")
     public void setSignUpFailed(String signUpFailed) {
-        MessagesConfig.SIGN_UP_FAILED = signUpFailed;
+        MessageConfig.SIGN_UP_FAILED = signUpFailed;
     }
 
     @Value("${app.user.not.found}")
@@ -43,7 +43,7 @@ public class MessagesConfig {
 
     @Value("${app.duplicates.not.allowed}")
     public void setDuplicatesNotAllowed(String duplicatesNotAllowed) {
-        MessagesConfig.DUPLICATES_NOT_ALLOWED = duplicatesNotAllowed;
+        MessageConfig.DUPLICATES_NOT_ALLOWED = duplicatesNotAllowed;
     }
 
     @Value("${app.unknown.error}")

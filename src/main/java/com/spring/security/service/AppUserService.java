@@ -1,4 +1,4 @@
-package com.spring.security.business.service;
+package com.spring.security.service;
 
 import com.spring.security.domain.AppUser;
 
