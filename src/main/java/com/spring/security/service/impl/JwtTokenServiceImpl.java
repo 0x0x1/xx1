@@ -25,18 +25,17 @@ public class JwtTokenServiceImpl implements TokenService {
 
     @Override
     public String generateToken(Authentication authentication) {
-//        Instant now = Instant.now();
-//        String scope = authentication.getAuthorities().stream()
-//                .map(GrantedAuthority::getAuthority)
-//                .collect(Collectors.joining(" "));
-//        JwtClaimsSet claims = JwtClaimsSet.builder()
-//                .issuer("self")
-//                .issuedAt(now)
-//                .expiresAt(now.plus(1, ChronoUnit.HOURS))
-//                .subject(authentication.getName())
-//                .claim("scope", scope)
-//                .build();
-//        return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-        return "test token";
+        Instant now = Instant.now();
+        String scope = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(" "));
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                .subject(authentication.getName())
+                .claim("scope", scope)
+                .build();
+        return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 }

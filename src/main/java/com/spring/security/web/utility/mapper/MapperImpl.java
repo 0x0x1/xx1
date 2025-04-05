@@ -7,21 +7,21 @@ import org.springframework.stereotype.Component;
 
 import com.spring.security.domain.AppUser;
 import com.spring.security.domain.Authority;
-import com.spring.security.web.payload.SignUpResponseDto;
+import com.spring.security.web.payload.RegisterResponseDto;
 
 /**
  * Mapper Implementation
  */
 @Component
-public class MapperImpl implements Mapper<AppUser, SignUpResponseDto> {
+public class MapperImpl implements Mapper<AppUser, RegisterResponseDto> {
 
     @Override
-    public SignUpResponseDto toDto(AppUser domain) {
+    public RegisterResponseDto toDto(AppUser domain) {
         if (domain == null) {
             throw new RuntimeException("Domain is null");
         }
 
-        var signUpResponse = new SignUpResponseDto();
+        var signUpResponse = new RegisterResponseDto();
         signUpResponse.setUsername(domain.getUsername());
         signUpResponse.setPassword(domain.getPassword());
         signUpResponse.setEmail(domain.getEmail());
@@ -31,7 +31,7 @@ public class MapperImpl implements Mapper<AppUser, SignUpResponseDto> {
     }
 
     @Override
-    public AppUser toDomain(SignUpResponseDto dto) {
+    public AppUser toDomain(RegisterResponseDto dto) {
         if (dto == null) {
             throw new RuntimeException("SignUpResponse is null");
         }

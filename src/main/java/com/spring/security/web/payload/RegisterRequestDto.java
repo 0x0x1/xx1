@@ -2,7 +2,7 @@ package com.spring.security.web.payload;
 
 import com.spring.security.web.annotation.ValidEmail;
 
-public record SignUpRequestDto(
+public record RegisterRequestDto(
         String username,
         String password,
         @ValidEmail

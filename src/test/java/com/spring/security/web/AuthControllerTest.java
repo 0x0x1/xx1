@@ -28,8 +28,8 @@ import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.repository.UserRepository;
 import com.spring.security.web.config.MessageConfig;
 import com.spring.security.web.controller.AuthController;
-import com.spring.security.web.payload.SignUpRequestDto;
-import com.spring.security.web.payload.SignUpResponseDto;
+import com.spring.security.web.payload.RegisterRequestDto;
+import com.spring.security.web.payload.RegisterResponseDto;
 import com.spring.security.web.utility.mapper.Mapper;
 
 @Disabled
@@ -38,7 +38,7 @@ import com.spring.security.web.utility.mapper.Mapper;
 @Import(MessageConfig.class)
 public class AuthControllerTest {
 
-    private static final String REST_SIGN_UP_URL = "/api/auth/public/signup";
+    private static final String REST_SIGN_UP_URL = "/api/auth/public/register";
 
     @MockitoBean
     private AppUserService appUserService;
@@ -50,7 +50,7 @@ public class AuthControllerTest {
     private AuthorityRepository authorityRepository;
 
     @MockitoBean
-    private Mapper<AppUser, SignUpResponseDto> appUserMapper;
+    private Mapper<AppUser, RegisterResponseDto> appUserMapper;
 
     @Autowired
     private MockMvcTester mvc;
@@ -58,21 +58,21 @@ public class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    SignUpRequestDto signUpRequestDto;
-    SignUpRequestDto signUpRequestDtoInvalidEmail;
-    SignUpResponseDto signUpResponseDto;
+    RegisterRequestDto registerRequestDto;
+    RegisterRequestDto registerRequestDtoInvalidEmail;
+    RegisterResponseDto registerResponseDto;
     AppUser mockAppUser;
     Authority mockAuthority;
 
     @BeforeEach
     public void setUp() {
         //TODO create the mock objects more efficiently without populating the tests
-        signUpRequestDto = new SignUpRequestDto("testuser", "password123", "test@example.com");
-        signUpRequestDtoInvalidEmail = new SignUpRequestDto("testuser", "password123", "invalidEmail");
-        signUpResponseDto = new SignUpResponseDto();
-        signUpResponseDto.setUsername("testuser");
-        signUpResponseDto.setPassword("password123");
-        signUpResponseDto.setEmail("test@example.com");
+        registerRequestDto = new RegisterRequestDto("testuser", "password123", "test@example.com");
+        registerRequestDtoInvalidEmail = new RegisterRequestDto("testuser", "password123", "invalidEmail");
+        registerResponseDto = new RegisterResponseDto();
+        registerResponseDto.setUsername("testuser");
+        registerResponseDto.setPassword("password123");
+        registerResponseDto.setEmail("test@example.com");
 
         mockAppUser = new AppUser.Builder()
                 .setUsername("testuser")
@@ -89,7 +89,7 @@ public class AuthControllerTest {
     void when_SignUp_With_InvalidEmail_ThenFail() throws JsonProcessingException {
         //Mock externals
         Mockito.when(appUserService.existsByEmail(anyString())).thenReturn(false);
-        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDtoInvalidEmail);
+        String jsonRequest = objectMapper.writeValueAsString(registerRequestDtoInvalidEmail);
 
         String expectedJson = "{\"code\":400,\"message\":\"Validation failed.\",\"error\":[\"[email: Invalid email]\"],\"data\":null}";
 
@@ -105,7 +105,7 @@ public class AuthControllerTest {
     void when_SignUp_With_DuplicateEmail_ThenFail() throws JsonProcessingException {
         //Mock externals
         Mockito.when(appUserService.existsByEmail(anyString())).thenReturn(true);
-        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDto);
+        String jsonRequest = objectMapper.writeValueAsString(registerRequestDto);
 
         String expectedJson = "{\"code\":400,\"message\":\"Sign up failed.\",\"error\":[\"[Duplicates not allowed.]\"],\"data\":null}";
 
@@ -122,10 +122,10 @@ public class AuthControllerTest {
         //Mock externals
         Mockito.when(appUserService.existsByEmail(anyString())).thenReturn(false);
         Mockito.when(appUserService.save(any())).thenReturn(mockAppUser);
-        Mockito.when(appUserMapper.toDto(any())).thenReturn(signUpResponseDto);
+        Mockito.when(appUserMapper.toDto(any())).thenReturn(registerResponseDto);
         Mockito.when(authorityRepository.findByAuthorityName(anyString())).thenReturn(mockAuthority);
 
-        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDto);
+        String jsonRequest = objectMapper.writeValueAsString(registerRequestDto);
 
         String expectedJson = "{\"code\":200,\"message\":\"User registration is successful.\",\"error\":[\"[]\"],\"data\":{\"username\":\"testuser\",\"password\":\"password123\",\"email\":\"test@example.com\",\"authorities\":[]}}";
 
@@ -143,7 +143,7 @@ public class AuthControllerTest {
         Mockito.when(appUserService.existsByEmail(anyString()))
                 .thenThrow(new RuntimeException("Something went wrong"));
 
-        String jsonRequest = objectMapper.writeValueAsString(signUpRequestDto);
+        String jsonRequest = objectMapper.writeValueAsString(registerRequestDto);
 
         String expectedJson = "{\"code\":500,\"message\":\"Sign up failed.\",\"error\":[\"[Something went wrong]\"],\"data\":null}";
 

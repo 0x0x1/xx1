@@ -19,8 +19,12 @@ public class Result<T> {
         this.token = token;
     }
 
-    public static <T> Result<T> success(int code, String message, T data, String token) {
-        return new Result<>(code, message, List.of(), data, token);
+    public static <T> Result<T> success(int code, String message, T data) {
+        return new Result<>(code, message, List.of(), data, "");
+    }
+
+    public static <T> Result<T> success(int code, String message, String token) {
+        return new Result<>(code, message, List.of(), null, token);
     }
 
     public static <T> Result<T> failure(int code, String message, String error) {

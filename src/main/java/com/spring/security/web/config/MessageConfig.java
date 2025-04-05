@@ -15,10 +15,27 @@ public class MessageConfig {
     public static String DUPLICATES_NOT_ALLOWED;
     public static String UNKNOWN_ERROR;
     public static String VALIDATION_FAILED;
+    public static String LOGIN_SUCCESS;
+    public static String LOGIN_FAILED;
 
     @Value("${app.signup-success}")
     public void setSignUpSuccess(String value) {
         SIGN_UP_SUCCESS = value;
+    }
+
+    @Value("${app.signup.failed}")
+    public void setSignUpFailed(String signUpFailed) {
+        MessageConfig.SIGN_UP_FAILED = signUpFailed;
+    }
+
+    @Value("${app.login.failed}")
+    public void loginFailed(String loginFailed) {
+        MessageConfig.LOGIN_FAILED = loginFailed;
+    }
+
+    @Value("${app.login.success}")
+    public void loginSuccess(String loginSuccess) {
+        MessageConfig.LOGIN_SUCCESS = loginSuccess;
     }
 
     @Value("${app.validation.failed}")
@@ -26,10 +43,6 @@ public class MessageConfig {
         VALIDATION_FAILED = validationFailed;
     }
 
-    @Value("${app.signup.failed}")
-    public void setSignUpFailed(String signUpFailed) {
-        MessageConfig.SIGN_UP_FAILED = signUpFailed;
-    }
 
     @Value("${app.user.not.found}")
     public void setUserNotFound(String userNotFound) {

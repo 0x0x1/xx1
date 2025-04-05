@@ -10,8 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
-import com.spring.security.web.annotation.ValidEmail;
-
 @Entity
 public class AppUser {
 
@@ -93,5 +91,9 @@ public class AppUser {
 
     public List<Authority> getAuthorities() {
         return authorities;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
