@@ -2,6 +2,7 @@ package com.spring.security.web.controller;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ public class AuthController implements AuthControllerDefinition {
     @Override
     @PostMapping(value = REST_REGISTER_PATH)
     public ResponseEntity<Result<RegisterResponseDto>> register(@RequestBody @Valid RegisterRequestDto registerRequestDto) {
+        tokenService.isTokenValid("test");
         LOGGER.debug("signup request: {}", registerRequestDto);
 
         boolean userExists = appUserService.existsByEmail(registerRequestDto.email());

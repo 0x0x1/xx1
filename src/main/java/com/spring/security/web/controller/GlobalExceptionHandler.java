@@ -1,10 +1,15 @@
 package com.spring.security.web.controller;
 
+import java.net.URI;
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,5 +42,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest()
                 .body(Result.failure(HttpStatus.BAD_REQUEST.value(), MessageConfig.VALIDATION_FAILED, errors));
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ProblemDetail handleJwtException(JwtException ex, HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        problem.setTitle("Invalid JWT Token");
+        problem.setDetail(ex.getMessage());
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
     }
 }

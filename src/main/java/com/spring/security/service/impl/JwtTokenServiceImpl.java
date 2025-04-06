@@ -7,7 +7,11 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
@@ -18,9 +22,11 @@ import com.spring.security.service.TokenService;
 public class JwtTokenServiceImpl implements TokenService {
 
     private final JwtEncoder encoder;
+    private final JwtDecoder decoder;
 
-    public JwtTokenServiceImpl(JwtEncoder encoder) {
+    public JwtTokenServiceImpl(JwtEncoder encoder, JwtDecoder decoder) {
         this.encoder = encoder;
+        this.decoder = decoder;
     }
 
     @Override
@@ -37,5 +43,26 @@ public class JwtTokenServiceImpl implements TokenService {
                 .claim("scope", scope)
                 .build();
         return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    @Override
+    public boolean isTokenValid(String token) {
+        Jwt jwt = decoder.decode(token);
+        String username = jwt.getSubject();
+        Instant expiresAt = jwt.getExpiresAt();
+
+        if (username == null || expiresAt == null) {
+            return false;
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails authenticatedAppUser = (AppUserPrincipal) authentication.getPrincipal();
+
+        return username.equals(authenticatedAppUser.getUsername()) && expiresAt.isAfter(Instant.now());
+    }
+
+    @Override
+    public String extractUsername(String token) {
+        return decoder.decode(token).getSubject();
     }
 }
