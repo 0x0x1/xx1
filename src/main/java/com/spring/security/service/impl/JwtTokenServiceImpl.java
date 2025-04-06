@@ -9,24 +9,28 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
-import com.spring.security.service.TokenService;
+import com.spring.security.service.JwtTokenService;
 
 @Service
-public class JwtTokenServiceImpl implements TokenService {
+public class JwtTokenServiceImpl implements JwtTokenService {
 
     private final JwtEncoder encoder;
     private final JwtDecoder decoder;
+    private final UserDetailsService userDetailsService;
 
-    public JwtTokenServiceImpl(JwtEncoder encoder, JwtDecoder decoder) {
+    public JwtTokenServiceImpl(JwtEncoder encoder, JwtDecoder decoder, UserDetailsService userDetailsService) {
         this.encoder = encoder;
         this.decoder = decoder;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -54,15 +58,20 @@ public class JwtTokenServiceImpl implements TokenService {
         if (username == null || expiresAt == null) {
             return false;
         }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails authenticatedAppUser = (AppUserPrincipal) authentication.getPrincipal();
-
-        return username.equals(authenticatedAppUser.getUsername()) && expiresAt.isAfter(Instant.now());
+        String registeredUser = userDetailsService.loadUserByUsername(username).getUsername();
+        return username.equals(registeredUser) && expiresAt.isAfter(Instant.now());
     }
 
     @Override
     public String extractUsername(String token) {
         return decoder.decode(token).getSubject();
+    }
+
+    @Override
+    public String trimToken(String token, String prefix) {
+        if (token == null || !token.startsWith(prefix)) {
+            throw new JwtException("An error occurred while attempting to extract the Jwt: Malformed token");
+        }
+        return token.substring(7);
     }
 }

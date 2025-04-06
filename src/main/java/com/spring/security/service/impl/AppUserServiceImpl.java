@@ -34,4 +34,8 @@ public class AppUserServiceImpl implements AppUserService {
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
+
+    public String trimToken(String token) {
+        return token.substring(7);
+    }
 }
