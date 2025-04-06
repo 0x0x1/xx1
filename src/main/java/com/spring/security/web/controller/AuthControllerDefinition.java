@@ -23,6 +23,9 @@ public interface AuthControllerDefinition {
     String REST_AUTH_PATH = "/api/auth";
     String REST_REGISTER_PATH = "/public/register";
     String REST_LOGIN_PATH = "/public/login";
+    String REST_ADMIN_PATH = "/private/admin";
+    String REST_USER_PATH = "/private/user";
+    String REST_PUBLIC_RESOURCE_PATH = "/public/resource";
 
     @Operation(description = "Allows user to register.", method = "POST")
     @ApiResponses({

@@ -6,7 +6,8 @@ public record RegisterRequestDto(
         String username,
         String password,
         @ValidEmail
-        String email
+        String email,
+        String authorityName
 ) {
     @Override
     public String username() {
@@ -21,5 +22,10 @@ public record RegisterRequestDto(
     @Override
     public String email() {
         return email;
+    }
+
+    @Override
+    public String authorityName() {
+        return authorityName;
     }
 }

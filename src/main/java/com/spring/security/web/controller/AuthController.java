@@ -1,5 +1,7 @@
 package com.spring.security.web.controller;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.spring.security.domain.Authority;
 import com.spring.security.service.AppUserService;
 import com.spring.security.domain.AppUser;
 import com.spring.security.repository.AuthorityRepository;
@@ -88,9 +92,28 @@ public class AuthController implements AuthControllerDefinition {
         return ResponseEntity.ok(Result.success(HttpStatus.OK.value(), MessageConfig.LOGIN_SUCCESS, generatedToken));
     }
 
-    @GetMapping(value = "/test")
+    @GetMapping(value = REST_ADMIN_PATH)
+    public String admin() {
+        final var loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        final var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+
+        return "Protected Data only for admins. Logged in user: " + loggedInUser + ", role: " + role;
+    }
+
+    @GetMapping(value = REST_USER_PATH)
+    public String user() {
+        final var loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        final var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+
+        return "Protected Data for admins and users. Logged in user: " + loggedInUser + ", role: " + role;
+    }
+
+    @GetMapping(value = REST_PUBLIC_RESOURCE_PATH)
     public String test() {
-        return "You are successfully accessing protected data. Currently authenticated username: " + SecurityContextHolder.getContext().getAuthentication().getName();
+        final var loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        final var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+
+        return "Protected Data for everyone " + loggedInUser + ", role: " + role;
     }
 
     private AppUser createAppUser(RegisterRequestDto registerRequestDto) {
@@ -98,8 +121,7 @@ public class AuthController implements AuthControllerDefinition {
                 .setUsername(registerRequestDto.username())
                 .setEmail(registerRequestDto.email())
                 .setPassword(registerRequestDto.password())
-                // defined roles
-                .setAuthorities(List.of(authorityRepository.findByAuthorityName("ADMIN")))
+                .setAuthorities(List.of(authorityRepository.findByAuthorityName(registerRequestDto.authorityName())))
                 .build();
     }
 

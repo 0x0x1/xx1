@@ -24,8 +24,12 @@ public class DataLoader implements CommandLineRunner {
             var user = new Authority();
             user.setAuthorityName("USER");
 
+            var visitor = new Authority();
+            visitor.setAuthorityName("VISITOR");
+
             authorityRepository.save(admin);
             authorityRepository.save(user);
+            authorityRepository.save(visitor);
         }
     }
 }

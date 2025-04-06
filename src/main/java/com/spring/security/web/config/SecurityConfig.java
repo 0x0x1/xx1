@@ -2,11 +2,14 @@ package com.spring.security.web.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,6 +34,8 @@ import com.spring.security.web.filter.JwtAuthenticationFilter;
 public class SecurityConfig {
 
     public static final String PUBLIC_API = "/api/auth/public/**";
+    public static final String PRIVATE_API_ADMIN = "/api/auth/private/admin";
+    public static final String PRIVATE_API_USER = "/api/auth/private/user";
 
     private final RsaKeyProperties rsaKeyProperties;
 
@@ -45,11 +50,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers(PUBLIC_API).permitAll()
+                                .requestMatchers(PRIVATE_API_ADMIN).hasAuthority("SCOPE_ADMIN")
+                                .requestMatchers(PRIVATE_API_USER).hasAuthority("SCOPE_USER")
                                 .anyRequest().authenticated())
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .formLogin(Customizer.withDefaults())
                 .build();
     }
 
@@ -78,5 +84,13 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenService jwtTokenService, UserDetailsService userDetailsService) {
         return new JwtAuthenticationFilter(jwtTokenService, userDetailsService);
+    }
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.withRolePrefix("SCOPE_")
+                .role("ADMIN").implies("USER", "VISITOR")
+                .role("USER").implies("VISITOR")
+                .build();
     }
 }

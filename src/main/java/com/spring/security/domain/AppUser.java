@@ -1,5 +1,6 @@
 package com.spring.security.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -22,7 +23,7 @@ public class AppUser {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "app_user_id")
-    private List<Authority> authorities;
+    private List<Authority> authorities = new ArrayList<>();
 
     public AppUser(Builder builder) {
         this.id = builder.id;
@@ -39,7 +40,7 @@ public class AppUser {
         private String username;
         private String password;
         private String email;
-        private List<Authority> authorities;
+        private List<Authority> authorities = new ArrayList<>();
 
         public Builder setId(Long id) {
             this.id = id;
@@ -61,7 +62,10 @@ public class AppUser {
             return this;
         }
         public Builder setAuthorities(List<Authority> authorities) {
-            this.authorities = authorities;
+            this.authorities.clear();
+            if (authorities != null) {
+                this.authorities.addAll(authorities);
+            }
             return this;
         }
 
