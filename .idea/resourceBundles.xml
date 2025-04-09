@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ResourceBundleManager">
+    <file url="file://$PROJECT_DIR$/src/main/resources/i18n/error.properties" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/i18n/error_de.properties" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/i18n/error_message.properties" />
+    <custom-resource-bundle>
+      <file value="file://$PROJECT_DIR$/src/main/resources/i18n/error.properties" />
+      <file value="file://$PROJECT_DIR$/src/main/resources/i18n/error_de.properties" />
+      <base-name>error</base-name>
+    </custom-resource-bundle>
+  </component>
+</project>

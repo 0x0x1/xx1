@@ -1,21 +1,29 @@
 package com.spring.security.web.controller;
 
+import static com.spring.security.web.utility.ApplicationConstants.BAD_REQUEST;
+import static com.spring.security.web.utility.ApplicationConstants.CREATED;
+import static com.spring.security.web.utility.ApplicationConstants.DUPLICATES_NOT_ALLOWED;
+import static com.spring.security.web.utility.ApplicationConstants.LOGIN_SUCCESS;
+import static com.spring.security.web.utility.ApplicationConstants.SIGN_UP_FAILED;
+import static com.spring.security.web.utility.ApplicationConstants.SIGN_UP_SUCCESS;
+import static com.spring.security.web.utility.ApplicationConstants.SUCCESS;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,17 +31,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.spring.security.domain.Authority;
 import com.spring.security.service.AppUserService;
 import com.spring.security.domain.AppUser;
 import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.service.JwtTokenService;
 import com.spring.security.web.Result;
 import com.spring.security.web.payload.LoginRequestDto;
-import com.spring.security.web.payload.LoginResponseDto;
 import com.spring.security.web.payload.RegisterRequestDto;
 import com.spring.security.web.payload.RegisterResponseDto;
-import com.spring.security.web.config.MessageConfig;
+import com.spring.security.web.utility.MessageUtil;
 import com.spring.security.web.utility.mapper.Mapper;
 
 @RestController
@@ -47,40 +53,46 @@ public class AuthController implements AuthControllerDefinition {
     private final Mapper<AppUser, RegisterResponseDto> mapper;
     private final JwtTokenService jwtTokenService;
     private final AuthenticationManager authenticationManager;
+    private final MessageSource messageSource;
+    private final MessageUtil messageUtil;
 
-    @Autowired
-    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository, Mapper<AppUser, RegisterResponseDto> mapper, JwtTokenService jwtTokenService, AuthenticationManager authenticationManager) {
+    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository, Mapper<AppUser, RegisterResponseDto> mapper, JwtTokenService jwtTokenService, AuthenticationManager authenticationManager, MessageSource messageSource, MessageUtil messageUtil) {
         this.appUserService = appUserService;
         this.authorityRepository = authorityRepository;
         this.mapper = mapper;
         this.jwtTokenService = jwtTokenService;
         this.authenticationManager = authenticationManager;
+        this.messageSource = messageSource;
+        this.messageUtil = messageUtil;
     }
 
     @Override
     @PostMapping(value = REST_REGISTER_PATH)
-    public ResponseEntity<Result<RegisterResponseDto>> register(@RequestBody @Valid RegisterRequestDto registerRequestDto) {
-        LOGGER.debug("signup request: {}", registerRequestDto);
+    public ResponseEntity<Result<?>> register(@RequestBody @Valid RegisterRequestDto requestDto, HttpServletRequest request) {
+        LOGGER.debug("signup request: {}", requestDto);
+        //If your system is in en_US then replace request.getLocale() with Locale.GERMAN to test the result.
+        Locale locale = Locale.GERMAN;
 
-        boolean userExists = appUserService.existsByEmail(registerRequestDto.email());
+        boolean userExists = appUserService.existsByEmail(requestDto.email());
 
         if (userExists) {
-            return ResponseEntity.badRequest()
-                    .body(Result.failure(HttpStatus.BAD_REQUEST.value(), MessageConfig.SIGN_UP_FAILED, MessageConfig.DUPLICATES_NOT_ALLOWED));
-        } else {
-            var appUser = createAppUser(registerRequestDto);
+            var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(SIGN_UP_FAILED, locale), messageUtil.getMessage(DUPLICATES_NOT_ALLOWED, locale));
+            return ResponseEntity.status(BAD_REQUEST).body(result);
+          }
+            var appUser = createAppUser(requestDto);
             AppUser signedUpUser = signUpUser(appUser);
 
             var registerResponseDto = mapper.toDto(signedUpUser);
+            var result = Result.success(CREATED, messageUtil.getMessage(SIGN_UP_SUCCESS, locale), registerResponseDto);
 
-            return ResponseEntity.ok(Result.success(HttpStatus.OK.value(), MessageConfig.SIGN_UP_SUCCESS, registerResponseDto));
-        }
+            return ResponseEntity.status(CREATED).body(result);
     }
 
     @Override
     @PostMapping(value = REST_LOGIN_PATH)
-    public ResponseEntity<Result<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<Result<?>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request) {
         LOGGER.debug("login request: {}", loginRequestDto);
+        Locale locale = Locale.GERMAN;
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword())
@@ -89,7 +101,8 @@ public class AuthController implements AuthControllerDefinition {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var generatedToken = jwtTokenService.generateToken(authentication);
 
-        return ResponseEntity.ok(Result.success(HttpStatus.OK.value(), MessageConfig.LOGIN_SUCCESS, generatedToken));
+        var result = Result.success(SUCCESS, messageUtil.getMessage(LOGIN_SUCCESS, locale), generatedToken);
+        return ResponseEntity.status(SUCCESS).body(result);
     }
 
     @GetMapping(value = REST_ADMIN_PATH)

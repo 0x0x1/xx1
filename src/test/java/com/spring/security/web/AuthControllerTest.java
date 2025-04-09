@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -26,7 +25,6 @@ import com.spring.security.domain.AppUser;
 import com.spring.security.domain.Authority;
 import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.repository.UserRepository;
-import com.spring.security.web.config.MessageConfig;
 import com.spring.security.web.controller.AuthController;
 import com.spring.security.web.payload.RegisterRequestDto;
 import com.spring.security.web.payload.RegisterResponseDto;
@@ -35,7 +33,7 @@ import com.spring.security.web.utility.mapper.Mapper;
 @Disabled
 @WebMvcTest(controllers = AuthController.class)
 @AutoConfigureMockMvc
-@Import(MessageConfig.class)
+//@Import(MessageConfig.class)
 public class AuthControllerTest {
 
     private static final String REST_SIGN_UP_URL = "/api/auth/public/register";

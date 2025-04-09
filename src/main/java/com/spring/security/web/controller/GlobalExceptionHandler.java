@@ -1,7 +1,13 @@
 package com.spring.security.web.controller;
 
+import static com.spring.security.web.utility.ApplicationConstants.BAD_REQUEST;
+import static com.spring.security.web.utility.ApplicationConstants.INTERNAL_SERVER_ERROR;
+import static com.spring.security.web.utility.ApplicationConstants.SIGN_UP_FAILED;
+import static com.spring.security.web.utility.ApplicationConstants.VALIDATION_FAILED;
+
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -15,33 +21,42 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.spring.security.web.Result;
-import com.spring.security.web.payload.RegisterResponseDto;
-import com.spring.security.web.config.MessageConfig;
+import com.spring.security.web.utility.MessageUtil;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final MessageUtil messageUtil;
+
+    public GlobalExceptionHandler(MessageUtil messageUtil) {
+        this.messageUtil = messageUtil;
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Result<RegisterResponseDto>> handleUnexpectedException(Exception e) {
+    public ResponseEntity<Result<?>> handleUnexpectedException(Exception e, HttpServletRequest request) {
         //rethrow authentication exception so that spring security handles UsernameNotFound and BadCredentials
         if (e instanceof AuthenticationException) {
             throw (AuthenticationException) e;
         }
-        return ResponseEntity.internalServerError()
-                .body(Result.failure(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                MessageConfig.SIGN_UP_FAILED, e.getMessage()));
+
+        Locale locale = request.getLocale();
+
+        var result = Result.failure(INTERNAL_SERVER_ERROR, messageUtil.getMessage(SIGN_UP_FAILED, locale), e.getMessage());
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(result);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Result<RegisterResponseDto>> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Result<?>> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList();
 
-        return ResponseEntity.badRequest()
-                .body(Result.failure(HttpStatus.BAD_REQUEST.value(), MessageConfig.VALIDATION_FAILED, errors));
+        Locale locale = request.getLocale();
+
+        var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(VALIDATION_FAILED, locale), errors);
+        return ResponseEntity.status(BAD_REQUEST).body(result);
     }
 
     @ExceptionHandler(JwtException.class)
