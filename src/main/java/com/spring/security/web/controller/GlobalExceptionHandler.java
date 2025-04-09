@@ -6,6 +6,7 @@ import static com.spring.security.web.utility.ApplicationConstants.SIGN_UP_FAILE
 import static com.spring.security.web.utility.ApplicationConstants.VALIDATION_FAILED;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,15 +34,24 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Result<?>> handleUnexpectedException(Exception e, HttpServletRequest request) {
+    public ResponseEntity<Result<?>> handleUnexpectedException(Exception ex, HttpServletRequest request) {
         //rethrow authentication exception so that spring security handles UsernameNotFound and BadCredentials
-        if (e instanceof AuthenticationException) {
-            throw (AuthenticationException) e;
+        if (ex instanceof AuthenticationException) {
+            throw (AuthenticationException) ex;
         }
 
         Locale locale = request.getLocale();
+        String localizedMessage = messageUtil.getMessage(SIGN_UP_FAILED, locale);
+        List<String> errors = new ArrayList<>();
+        errors.add(ex.getMessage());
 
-        var result = Result.failure(INTERNAL_SERVER_ERROR, messageUtil.getMessage(SIGN_UP_FAILED, locale), e.getMessage());
+        var result = Result.buildWith()
+                .code(INTERNAL_SERVER_ERROR)
+                .message(localizedMessage)
+                .error(errors)
+                .build();
+
+        //var result = Result.failure(INTERNAL_SERVER_ERROR, messageUtil.getMessage(SIGN_UP_FAILED, locale), e.getMessage());
         return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(result);
     }
 
@@ -54,8 +64,14 @@ public class GlobalExceptionHandler {
                 .toList();
 
         Locale locale = request.getLocale();
+        String localizedMessage = messageUtil.getMessage(VALIDATION_FAILED, locale);
 
-        var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(VALIDATION_FAILED, locale), errors);
+        var result = Result.buildWith()
+                .code(BAD_REQUEST)
+                .message(localizedMessage)
+                .error(errors)
+                .build();
+        //var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(VALIDATION_FAILED, locale), errors);
         return ResponseEntity.status(BAD_REQUEST).body(result);
     }
 

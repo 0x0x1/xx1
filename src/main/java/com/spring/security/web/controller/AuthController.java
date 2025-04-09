@@ -9,7 +9,6 @@ import static com.spring.security.web.utility.ApplicationConstants.SIGN_UP_SUCCE
 import static com.spring.security.web.utility.ApplicationConstants.SUCCESS;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -53,16 +52,16 @@ public class AuthController implements AuthControllerDefinition {
     private final Mapper<AppUser, RegisterResponseDto> mapper;
     private final JwtTokenService jwtTokenService;
     private final AuthenticationManager authenticationManager;
-    private final MessageSource messageSource;
     private final MessageUtil messageUtil;
 
-    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository, Mapper<AppUser, RegisterResponseDto> mapper, JwtTokenService jwtTokenService, AuthenticationManager authenticationManager, MessageSource messageSource, MessageUtil messageUtil) {
+    public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository,
+                          Mapper<AppUser, RegisterResponseDto> mapper, JwtTokenService jwtTokenService,
+                          AuthenticationManager authenticationManager, MessageUtil messageUtil) {
         this.appUserService = appUserService;
         this.authorityRepository = authorityRepository;
         this.mapper = mapper;
         this.jwtTokenService = jwtTokenService;
         this.authenticationManager = authenticationManager;
-        this.messageSource = messageSource;
         this.messageUtil = messageUtil;
     }
 
@@ -76,16 +75,33 @@ public class AuthController implements AuthControllerDefinition {
         boolean userExists = appUserService.existsByEmail(requestDto.email());
 
         if (userExists) {
-            var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(SIGN_UP_FAILED, locale), messageUtil.getMessage(DUPLICATES_NOT_ALLOWED, locale));
+            String localizedMessage = messageUtil.getMessage(SIGN_UP_FAILED, locale);
+            String errorMessage = messageUtil.getMessage(DUPLICATES_NOT_ALLOWED, locale);
+            List<String> errorMessages = new ArrayList<>();
+            errorMessages.add(errorMessage);
+
+            var result = Result.buildWith()
+                    .code(BAD_REQUEST)
+                    .message(localizedMessage)
+                    .error(errorMessages)
+                    .build();
+
             return ResponseEntity.status(BAD_REQUEST).body(result);
           }
-            var appUser = createAppUser(requestDto);
-            AppUser signedUpUser = signUpUser(appUser);
 
-            var registerResponseDto = mapper.toDto(signedUpUser);
-            var result = Result.success(CREATED, messageUtil.getMessage(SIGN_UP_SUCCESS, locale), registerResponseDto);
+        var appUser = createAppUser(requestDto);
+        AppUser RegisteredUser = registerUser(appUser);
+        String localizedMessage = messageUtil.getMessage(SIGN_UP_SUCCESS, locale);
 
-            return ResponseEntity.status(CREATED).body(result);
+        var registerResponseDto = mapper.toDto(RegisteredUser);
+
+        var result = Result.buildWith()
+                .code(CREATED)
+                .message(localizedMessage)
+                .data(registerResponseDto)
+                .build();
+
+        return ResponseEntity.status(CREATED).body(result);
     }
 
     @Override
@@ -101,7 +117,14 @@ public class AuthController implements AuthControllerDefinition {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         var generatedToken = jwtTokenService.generateToken(authentication);
 
-        var result = Result.success(SUCCESS, messageUtil.getMessage(LOGIN_SUCCESS, locale), generatedToken);
+        String localizedMessage = messageUtil.getMessage(LOGIN_SUCCESS, locale);
+
+        var result = Result.buildWith()
+                .code(SUCCESS)
+                .message(localizedMessage)
+                .token(generatedToken)
+                .build();
+
         return ResponseEntity.status(SUCCESS).body(result);
     }
 
@@ -138,7 +161,7 @@ public class AuthController implements AuthControllerDefinition {
                 .build();
     }
 
-    private AppUser signUpUser(AppUser appUser) {
+    private AppUser registerUser(AppUser appUser) {
         return appUserService.save(appUser);
     }
 }
