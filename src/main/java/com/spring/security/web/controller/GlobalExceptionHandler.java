@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
         var result = Result.buildWith()
                 .code(INTERNAL_SERVER_ERROR)
                 .message(localizedMessage)
-                .error(errors)
+                .errors(errors)
                 .build();
 
         //var result = Result.failure(INTERNAL_SERVER_ERROR, messageUtil.getMessage(SIGN_UP_FAILED, locale), e.getMessage());
@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
         var result = Result.buildWith()
                 .code(BAD_REQUEST)
                 .message(localizedMessage)
-                .error(errors)
+                .errors(errors)
                 .build();
         //var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(VALIDATION_FAILED, locale), errors);
         return ResponseEntity.status(BAD_REQUEST).body(result);

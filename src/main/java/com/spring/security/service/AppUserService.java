@@ -1,10 +1,10 @@
 package com.spring.security.service;
 
-import com.spring.security.domain.AppUser;
+import com.spring.security.domain.User;
 
 public interface AppUserService {
 
-    AppUser save(AppUser appUser);
+    User save(User user);
     boolean userExists(String username);
     boolean existsByEmail(String email);
 }

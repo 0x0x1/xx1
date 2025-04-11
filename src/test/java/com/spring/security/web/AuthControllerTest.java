@@ -20,8 +20,8 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.spring.security.domain.User;
 import com.spring.security.service.AppUserService;
-import com.spring.security.domain.AppUser;
 import com.spring.security.domain.Authority;
 import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.repository.UserRepository;
@@ -48,7 +48,7 @@ public class AuthControllerTest {
     private AuthorityRepository authorityRepository;
 
     @MockitoBean
-    private Mapper<AppUser, RegisterResponseDto> appUserMapper;
+    private Mapper<User, RegisterResponseDto> appUserMapper;
 
     @Autowired
     private MockMvcTester mvc;
@@ -59,7 +59,7 @@ public class AuthControllerTest {
     RegisterRequestDto registerRequestDto;
     RegisterRequestDto registerRequestDtoInvalidEmail;
     RegisterResponseDto registerResponseDto;
-    AppUser mockAppUser;
+    User mockUser;
     Authority mockAuthority;
 
     @BeforeEach
@@ -72,7 +72,7 @@ public class AuthControllerTest {
         registerResponseDto.setPassword("password123");
         registerResponseDto.setEmail("test@example.com");
 
-        mockAppUser = new AppUser.Builder()
+        mockUser = new User.Builder()
                 .setUsername("testuser")
                 .setEmail("test@example.com")
                 .setPassword("password123")
@@ -122,7 +122,7 @@ public class AuthControllerTest {
     void when_SignUp_With_validData_ThenSuccess() throws JsonProcessingException {
         //Mock externals
         Mockito.when(appUserService.existsByEmail(anyString())).thenReturn(false);
-        Mockito.when(appUserService.save(any())).thenReturn(mockAppUser);
+        Mockito.when(appUserService.save(any())).thenReturn(mockUser);
         Mockito.when(appUserMapper.toDto(any())).thenReturn(registerResponseDto);
         Mockito.when(authorityRepository.findByAuthorityName(anyString())).thenReturn(mockAuthority);
 

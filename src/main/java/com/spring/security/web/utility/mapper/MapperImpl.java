@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import com.spring.security.domain.AppUser;
+import com.spring.security.domain.User;
 import com.spring.security.domain.Authority;
 import com.spring.security.web.payload.RegisterResponseDto;
 
@@ -13,10 +13,10 @@ import com.spring.security.web.payload.RegisterResponseDto;
  * Mapper Implementation
  */
 @Component
-public class MapperImpl implements Mapper<AppUser, RegisterResponseDto> {
+public class MapperImpl implements Mapper<User, RegisterResponseDto> {
 
     @Override
-    public RegisterResponseDto toDto(AppUser domain) {
+    public RegisterResponseDto toDto(User domain) {
         if (domain == null) {
             throw new RuntimeException("Domain is null");
         }
@@ -31,7 +31,7 @@ public class MapperImpl implements Mapper<AppUser, RegisterResponseDto> {
     }
 
     @Override
-    public AppUser toDomain(RegisterResponseDto dto) {
+    public User toDomain(RegisterResponseDto dto) {
         if (dto == null) {
             throw new RuntimeException("SignUpResponse is null");
         }
@@ -40,7 +40,7 @@ public class MapperImpl implements Mapper<AppUser, RegisterResponseDto> {
                 .map(Authority::new)
                 .collect(Collectors.toList());
 
-        return new AppUser.Builder()
+        return new User.Builder()
                 .setUsername(dto.getUsername())
                 .setEmail(dto.getEmail())
                 .setPassword(dto.getPassword())

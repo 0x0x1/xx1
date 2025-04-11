@@ -10,9 +10,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
-public class AppUser {
+@Table(name = "APPLICATION_USER")
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -25,7 +27,7 @@ public class AppUser {
     @JoinColumn(name = "app_user_id")
     private List<Authority> authorities = new ArrayList<>();
 
-    public AppUser(Builder builder) {
+    public User(Builder builder) {
         this.id = builder.id;
         this.username = builder.username;
         this.password = builder.password;
@@ -33,7 +35,7 @@ public class AppUser {
         this.authorities = builder.authorities;
     }
 
-    public AppUser() {}
+    public User() {}
 
     public static class Builder {
         private Long id;
@@ -69,11 +71,11 @@ public class AppUser {
             return this;
         }
 
-        public AppUser build() {
+        public User build() {
             if (username == null || password == null || email == null) {
                 throw new IllegalStateException("Missing required fields to create User");
             }
-            return new AppUser(this);
+            return new User(this);
         }
     }
 

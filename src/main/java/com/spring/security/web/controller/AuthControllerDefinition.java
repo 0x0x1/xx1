@@ -18,13 +18,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 * OpenAPI Documentation
 * */
 public interface AuthControllerDefinition {
-
-    String REST_AUTH_PATH = "/api/auth";
-    String REST_REGISTER_PATH = "/public/register";
-    String REST_LOGIN_PATH = "/public/login";
-    String REST_ADMIN_PATH = "/private/admin";
-    String REST_USER_PATH = "/private/user";
-    String REST_PUBLIC_RESOURCE_PATH = "/public/resource";
+    String BASE_PATH = "/api/auth";
+    String REGISTRATION_PATH = "/public/register";
+    String LOGIN_PATH = "/public/login";
+    String ADMIN_PATH = "/private/admin";
+    String USER_PATH = "/private/user";
+    String PUBLIC_RESOURCE_PATH = "/public/resource";
 
     @Operation(description = "Allows user to register.", method = "POST")
     @ApiResponses({
@@ -40,4 +39,8 @@ public interface AuthControllerDefinition {
             @ApiResponse(responseCode = "400", description = "User does not exist")
     })
     ResponseEntity<Result<?>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request);
+
+    String user();
+    String admin();
+    String visitor();
 }

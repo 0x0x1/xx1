@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository
                 .findByUsername(username)
-                .map(AppUserPrincipal::new)
+                .map(Principal::new)
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found: " + username));
     }
 }

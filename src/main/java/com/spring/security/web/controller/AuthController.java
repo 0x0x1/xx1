@@ -15,9 +15,6 @@ import java.util.Locale;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.spring.security.domain.User;
 import com.spring.security.service.AppUserService;
-import com.spring.security.domain.AppUser;
 import com.spring.security.repository.AuthorityRepository;
 import com.spring.security.service.JwtTokenService;
 import com.spring.security.web.Result;
@@ -42,20 +39,17 @@ import com.spring.security.web.utility.MessageUtil;
 import com.spring.security.web.utility.mapper.Mapper;
 
 @RestController
-@RequestMapping(path = AuthControllerDefinition.REST_AUTH_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = AuthControllerDefinition.BASE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuthController implements AuthControllerDefinition {
-
-    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-
     private final AppUserService appUserService;
     private final AuthorityRepository authorityRepository;
-    private final Mapper<AppUser, RegisterResponseDto> mapper;
+    private final Mapper<User, RegisterResponseDto> mapper;
     private final JwtTokenService jwtTokenService;
     private final AuthenticationManager authenticationManager;
     private final MessageUtil messageUtil;
 
     public AuthController(AppUserService appUserService, AuthorityRepository authorityRepository,
-                          Mapper<AppUser, RegisterResponseDto> mapper, JwtTokenService jwtTokenService,
+                          Mapper<User, RegisterResponseDto> mapper, JwtTokenService jwtTokenService,
                           AuthenticationManager authenticationManager, MessageUtil messageUtil) {
         this.appUserService = appUserService;
         this.authorityRepository = authorityRepository;
@@ -66,9 +60,8 @@ public class AuthController implements AuthControllerDefinition {
     }
 
     @Override
-    @PostMapping(value = REST_REGISTER_PATH)
+    @PostMapping(value = REGISTRATION_PATH)
     public ResponseEntity<Result<?>> register(@RequestBody @Valid RegisterRequestDto requestDto, HttpServletRequest request) {
-        LOGGER.debug("signup request: {}", requestDto);
         //If your system is in en_US then replace request.getLocale() with Locale.GERMAN to test the result.
         Locale locale = Locale.GERMAN;
 
@@ -83,17 +76,17 @@ public class AuthController implements AuthControllerDefinition {
             var result = Result.buildWith()
                     .code(BAD_REQUEST)
                     .message(localizedMessage)
-                    .error(errorMessages)
+                    .errors(errorMessages)
                     .build();
 
             return ResponseEntity.status(BAD_REQUEST).body(result);
           }
 
-        var appUser = createAppUser(requestDto);
-        AppUser RegisteredUser = registerUser(appUser);
+        var user = createUser(requestDto);
+        User registeredUser = registerUser(user);
         String localizedMessage = messageUtil.getMessage(SIGN_UP_SUCCESS, locale);
 
-        var registerResponseDto = mapper.toDto(RegisteredUser);
+        var registerResponseDto = mapper.toDto(registeredUser);
 
         var result = Result.buildWith()
                 .code(CREATED)
@@ -105,9 +98,8 @@ public class AuthController implements AuthControllerDefinition {
     }
 
     @Override
-    @PostMapping(value = REST_LOGIN_PATH)
+    @PostMapping(value = LOGIN_PATH)
     public ResponseEntity<Result<?>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request) {
-        LOGGER.debug("login request: {}", loginRequestDto);
         Locale locale = Locale.GERMAN;
 
         Authentication authentication = authenticationManager.authenticate(
@@ -128,7 +120,7 @@ public class AuthController implements AuthControllerDefinition {
         return ResponseEntity.status(SUCCESS).body(result);
     }
 
-    @GetMapping(value = REST_ADMIN_PATH)
+    @GetMapping(value = ADMIN_PATH)
     public String admin() {
         final var loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         final var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
@@ -136,7 +128,7 @@ public class AuthController implements AuthControllerDefinition {
         return "Protected Data only for admins. Logged in user: " + loggedInUser + ", role: " + role;
     }
 
-    @GetMapping(value = REST_USER_PATH)
+    @GetMapping(value = USER_PATH)
     public String user() {
         final var loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         final var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
@@ -144,16 +136,16 @@ public class AuthController implements AuthControllerDefinition {
         return "Protected Data for admins and users. Logged in user: " + loggedInUser + ", role: " + role;
     }
 
-    @GetMapping(value = REST_PUBLIC_RESOURCE_PATH)
-    public String test() {
+    @GetMapping(value = PUBLIC_RESOURCE_PATH)
+    public String visitor() {
         final var loggedInUser = SecurityContextHolder.getContext().getAuthentication().getName();
         final var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
 
         return "Protected Data for everyone " + loggedInUser + ", role: " + role;
     }
 
-    private AppUser createAppUser(RegisterRequestDto registerRequestDto) {
-        return new AppUser.Builder()
+    private User createUser(RegisterRequestDto registerRequestDto) {
+        return new User.Builder()
                 .setUsername(registerRequestDto.username())
                 .setEmail(registerRequestDto.email())
                 .setPassword(registerRequestDto.password())
@@ -161,7 +153,7 @@ public class AuthController implements AuthControllerDefinition {
                 .build();
     }
 
-    private AppUser registerUser(AppUser appUser) {
-        return appUserService.save(appUser);
+    private User registerUser(User user) {
+        return appUserService.save(user);
     }
 }

@@ -8,40 +8,40 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.spring.security.domain.AppUser;
+import com.spring.security.domain.User;
 
 /**
  * Represents the currently authenticated user
  * */
-public class AppUserPrincipal implements UserDetails {
+public class Principal implements UserDetails {
 
-    private final AppUser appUser;
+    private final User user;
 
-    public AppUserPrincipal(AppUser appUser) {
-        this.appUser = appUser;
+    public Principal(User user) {
+        this.user = user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return appUser.getAuthorities().stream()
+        return user.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public String getPassword() {
-        return appUser.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return appUser.getUsername();
+        return user.getUsername();
     }
 
     @Override
     public String toString() {
         return "AppUserPrincipal{" +
-                "appUser=" + appUser +
+                "appUser=" + user +
                 '}';
     }
 }

@@ -3,7 +3,7 @@ package com.spring.security.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.spring.security.domain.AppUser;
+import com.spring.security.domain.User;
 import com.spring.security.repository.UserRepository;
 import com.spring.security.service.AppUserService;
 
@@ -19,10 +19,10 @@ public class AppUserServiceImpl implements AppUserService {
     }
 
     @Override
-    public AppUser save(AppUser appUser) {
-        String hashedPassword = passwordEncoder.encode(appUser.getPassword());
-        appUser.setPassword(hashedPassword);
-        return userRepository.save(appUser);
+    public User save(User user) {
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
+        return userRepository.save(user);
     }
 
     @Override
