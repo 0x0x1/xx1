@@ -1,9 +1,11 @@
 package com.spring.security.web.controller;
 
+import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.spring.security.web.Result;
@@ -31,14 +33,14 @@ public interface AuthControllerDefinition {
             @ApiResponse(responseCode = "409", description = "User already exists"),
             @ApiResponse(responseCode = "400", description = "Bad Request")
     })
-    ResponseEntity<Result<?>> register(@RequestBody @Valid RegisterRequestDto requestDto, HttpServletRequest request);
+    ResponseEntity<Result<?>> register(@NonNull HttpServletRequest request, @RequestBody @Valid RegisterRequestDto requestDto);
 
     @Operation(description = "Allows user to login.", method = "POST")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "login successful"),
             @ApiResponse(responseCode = "400", description = "User does not exist")
     })
-    ResponseEntity<Result<?>> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request);
+    ResponseEntity<Result<?>> login(@NonNull HttpServletRequest request, @RequestBody LoginRequestDto loginRequestDto);
 
     String user();
     String admin();

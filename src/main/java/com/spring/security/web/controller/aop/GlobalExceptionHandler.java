@@ -1,6 +1,7 @@
-package com.spring.security.web.controller;
+package com.spring.security.web.controller.aop;
 
 import static com.spring.security.web.utility.ApplicationConstants.BAD_REQUEST;
+import static com.spring.security.web.utility.ApplicationConstants.DUPLICATES_NOT_ALLOWED;
 import static com.spring.security.web.utility.ApplicationConstants.INTERNAL_SERVER_ERROR;
 import static com.spring.security.web.utility.ApplicationConstants.SIGN_UP_FAILED;
 import static com.spring.security.web.utility.ApplicationConstants.VALIDATION_FAILED;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.spring.security.web.Result;
+import com.spring.security.web.exception.DuplicateUserException;
 import com.spring.security.web.utility.MessageUtil;
 
 @ControllerAdvice
@@ -42,16 +44,10 @@ public class GlobalExceptionHandler {
 
         Locale locale = request.getLocale();
         String localizedMessage = messageUtil.getMessage(SIGN_UP_FAILED, locale);
-        List<String> errors = new ArrayList<>();
-        errors.add(ex.getMessage());
+        List<String> errorMessages = new ArrayList<>();
+        errorMessages.add(ex.getMessage());
 
-        var result = Result.buildWith()
-                .code(INTERNAL_SERVER_ERROR)
-                .message(localizedMessage)
-                .errors(errors)
-                .build();
-
-        //var result = Result.failure(INTERNAL_SERVER_ERROR, messageUtil.getMessage(SIGN_UP_FAILED, locale), e.getMessage());
+        var result = Result.status(INTERNAL_SERVER_ERROR).message(localizedMessage).errors(errorMessages).build();
         return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(result);
     }
 
@@ -63,24 +59,32 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList();
 
-        Locale locale = request.getLocale();
-        String localizedMessage = messageUtil.getMessage(VALIDATION_FAILED, locale);
+        String localizedMessage = messageUtil.getMessage(VALIDATION_FAILED, request.getLocale());
 
-        var result = Result.buildWith()
-                .code(BAD_REQUEST)
-                .message(localizedMessage)
-                .errors(errors)
-                .build();
-        //var result = Result.failure(BAD_REQUEST, messageUtil.getMessage(VALIDATION_FAILED, locale), errors);
+        var result = Result.status(BAD_REQUEST).message(localizedMessage).errors(errors).build();
         return ResponseEntity.status(BAD_REQUEST).body(result);
     }
 
     @ExceptionHandler(JwtException.class)
     public ProblemDetail handleJwtException(JwtException ex, HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+
         problem.setTitle("Invalid JWT Token");
         problem.setDetail(ex.getMessage());
         problem.setInstance(URI.create(request.getRequestURI()));
+
         return problem;
+    }
+
+    @ExceptionHandler(DuplicateUserException.class)
+    public ResponseEntity<Result<?>> handleDuplicateUserException(JwtException ex, HttpServletRequest request) {
+        String localizedMessage = messageUtil.getMessage(SIGN_UP_FAILED, request.getLocale());
+        String errorMessage = messageUtil.getMessage(DUPLICATES_NOT_ALLOWED, request.getLocale());
+
+        List<String> errorMessages = new ArrayList<>();
+        errorMessages.add(errorMessage);
+
+        var result = Result.status(BAD_REQUEST).message(localizedMessage).errors(errorMessages).build();
+        return ResponseEntity.status(BAD_REQUEST).body(result);
     }
 }

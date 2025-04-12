@@ -30,8 +30,8 @@ public class Result<T> {
 
     public T getData() { return this.data; }
 
-    public static <T> ResultBuilder<T> buildWith() {
-        return new ResultBuilder<T>();
+    public static <T> ResultBuilder<T> status(int code) {
+        return new ResultBuilder<T>().code(code);
     }
 
     public static final class ResultBuilder<T> {

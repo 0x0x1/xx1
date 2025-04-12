@@ -1,5 +1,7 @@
 package com.spring.security.web.payload;
 
+import org.springframework.util.Assert;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class LoginRequestDto {
@@ -10,6 +12,8 @@ public class LoginRequestDto {
     private final String password;
 
     public LoginRequestDto(String username, String password) {
+        Assert.isTrue(username != null && !username.isEmpty(), "Cannot pass null or empty values to constructor");
+        Assert.isTrue(password != null && !password.isEmpty(), "Cannot pass null or empty values to constructor");
         this.username = username;
         this.password = password;
     }
